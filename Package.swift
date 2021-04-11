@@ -5,7 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "Navvy",
-    platforms: [.iOS(.v13)],
+    platforms: [.iOS(.v13), .macOS(.v11)],
     products: [.library(name: "Navvy", targets: ["Navvy"])],
     targets: [.target(name: "Navvy", dependencies: [])]
 )
