@@ -7,10 +7,10 @@ public protocol ScreenTypeProtocol: Equatable {
 
 public final class Router<ScreenType: ScreenTypeProtocol>: ObservableObject {
 
-    private let queue = NavigationQueue()
-    private let viewsFactory: (ScreenType) -> AnyView
-    private let presentersFactory: PresentersFactoryProtocol
-    private var stack = [PresentationContext]()
+    internal let queue = NavigationQueue()
+    internal let viewsFactory: (ScreenType) -> AnyView
+    internal let presentersFactory: PresentersFactoryProtocol
+    internal var stack = [PresentationContext]()
 
     // MARK: - Init
     
@@ -73,7 +73,7 @@ public final class Router<ScreenType: ScreenTypeProtocol>: ObservableObject {
         }
     }
 
-    private func performDismissOperation(
+    internal func performDismissOperation(
         _ screenType: ScreenType,
         completion: (() -> Void)? = nil
     ) {
@@ -98,14 +98,14 @@ public final class Router<ScreenType: ScreenTypeProtocol>: ObservableObject {
         }
     }
 
-    private func makePresentationContext(for screenType: ScreenType) -> PresentationContext {
+    internal func makePresentationContext(for screenType: ScreenType) -> PresentationContext {
         let viewModel = NavigatableScreenViewModel(
             presenters: presentersFactory.makePresenters()
         )
-        let subscriptions: [Cancellable] = viewModel.showsViewPublishers.map {
-            $0.sink { [weak self] isVisible in
-                guard !isVisible else { return }
-                self?.cleanUpStack()
+        let subscriptions: [Cancellable] = viewModel.showsViewPublishers.map { [weak viewModel] in
+            $0.sink { [weak self] isPresenting in
+                guard !isPresenting, let viewModel = viewModel else { return }
+                self?.cleanStack(after: viewModel)
             }
         }
         return PresentationContext(
@@ -115,16 +115,16 @@ public final class Router<ScreenType: ScreenTypeProtocol>: ObservableObject {
         )
     }
 
-    private func cleanUpStack() {
+    internal func cleanStack(after viewModel: NavigatableScreenViewModel) {
         guard let lastVisibleScreenIndex = stack.firstIndex(
-            where: { !$0.screenViewModel.showsView }
+            where: { $0.screenViewModel === viewModel }
         ) else {
             return
         }
         self.stack = Array(self.stack[0...lastVisibleScreenIndex])
     }
 
-    private func view(
+    internal func view(
         for context: PresentationContext
     ) -> AnyView {
         let view = viewsFactory(context.screenType)
