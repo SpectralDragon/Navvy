@@ -11,16 +11,16 @@ struct FullScreenModifier<V: View>: ViewModifier {
     let content: () -> V
 
     @ViewBuilder
-    func body(content: Content) -> some View {
+    func body(content: Content) -> AnyView {
         #if os(macOS)
         
-        content
+        content.toAnyView()
         
         #else
         if #available(iOS 14.0, *) {
-            return content.fullScreenCover(isPresented: isPresented, content: self.content)
+            return content.fullScreenCover(isPresented: isPresented, content: self.content).toAnyView()
         } else {
-            return content
+            return content.toAnyView()
         }
         #endif
     }
