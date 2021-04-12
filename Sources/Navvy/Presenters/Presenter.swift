@@ -56,7 +56,9 @@ public final class NavigationLinkPresenter: Presenter {
             destination: destinationViewProvider(),
             isActive: isPresentingBinding,
             label: { EmptyView() }
-        ).toAnyView()
+        )
+        .buttonStyle(BorderlessButtonStyle())
+        .toAnyView()
     }
 }
 
